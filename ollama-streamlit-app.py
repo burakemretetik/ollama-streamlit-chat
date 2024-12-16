@@ -10,6 +10,30 @@ logging.basicConfig(level=logging.INFO)
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 
+import socket
+
+# To understand the error
+def stream_chat(model, messages):
+    try:
+        # Initialize the language model with a timeout
+        llm = Ollama(model=model, request_timeout=120.0)
+        # Stream chat responses from the model
+        resp = llm.stream_chat(messages)
+        response = ""
+        response_placeholder = st.empty()
+        # Append each piece of the response to the output
+        for r in resp:
+            response += r.delta
+            response_placeholder.write(response)
+        logging.info(f"Model: {model}, Messages: {messages}, Response: {response}")
+        return response
+    except socket.error as e:
+        logging.error(f"Network error during streaming: {str(e)}")
+        st.error(f"A network error occurred: {str(e)}")
+    except Exception as e:
+        logging.error(f"Error during streaming: {str(e)}")
+        st.error(f"An error occurred: {str(e)}")
+
 # Function to stream chat response based on selected model
 def stream_chat(model, messages):
     try:
